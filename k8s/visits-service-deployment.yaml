@@ -55,9 +55,8 @@ spec:
                name: visits-db-mysql
                key: mysql-root-password
         - name: MANAGEMENT_METRICS_EXPORT_WAVEFRONT_URI
-          value: proxy://wavefront-proxy.spring-pet-clinic.svc.cluster.local:2878
+          value: proxy://wavefront-proxy.wavefront.svc.cluster.local:2878
         ports:
         - containerPort: 8080
-        resources: {}
       restartPolicy: Always
 status: {}

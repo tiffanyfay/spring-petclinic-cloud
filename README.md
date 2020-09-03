@@ -157,16 +157,26 @@ Create the namespace for Spring Pet-clinic:
 kubectl apply -f k8s/init-namespace/ 
 ```
 
-Create a Kubernetes secret to store the URL and API Token of Wavefront (replace values with your own real ones):
+Create the Wavefront collector and proxy, and the various Kubernetes services that will be used later on by our deployments:
 
 ```
-kubectl create secret generic wavefront -n spring-pet-clinic --from-literal=wavefront-url=https://wavefront.surf --from-literal=wavefront-api-token=2e41f7cf-1111-2222-3333-7397a56113ca
+./scripts/deployWavefront.sh <cluster-name>
 ```
-
-Create the Wavefront proxy pod, and the various Kubernetes services that will be used later on by our deployments:
 
 ```
 kubectl apply -f k8s/init-services
+```
+
+Verify the Wavefront collector(s) and proxy are running:
+
+```
+✗ kubectl get pods,svc -n wavefront
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/wavefront-collector-cnrj9          1/1     Running   0          9h
+pod/wavefront-proxy-6f4db5f77f-b48wd   1/1     Running   0          9h
+
+NAME                      TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+service/wavefront-proxy   ClusterIP   10.103.53.56   <none>        2878/TCP,9411/TCP   9h
 ```
 
 Verify the services are available:
@@ -174,20 +184,10 @@ Verify the services are available:
 ```
 ✗ kubectl get svc -n spring-pet-clinic
 NAME                TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
-api-gateway         LoadBalancer   10.7.250.24    <pending>     80:32675/TCP        36s
+api-gateway         LoadBalancer   10.7.250.24    <external-ip>     80:32675/TCP        36s
 customers-service   ClusterIP      10.7.245.64    <none>        8080/TCP            36s
 vets-service        ClusterIP      10.7.245.150   <none>        8080/TCP            36s
 visits-service      ClusterIP      10.7.251.227   <none>        8080/TCP            35s
-wavefront-proxy     ClusterIP      10.7.253.85    <none>        2878/TCP,9411/TCP   37s
-```
-
-Verify the wavefront proxy is running:
-
-```
-✗ kubectl get pods -n spring-pet-clinic
-NAME                              READY   STATUS    RESTARTS   AGE
-wavefront-proxy-dfbd4b695-fdd6t   1/1     Running   0          36s
-
 ```
 
 ### Settings up databases with helm
@@ -236,7 +236,6 @@ vets-service-85cb8677df-l5xpj        1/1     Running   0          4m2s
 visits-db-mysql-master-0             1/1     Running   0          11m
 visits-db-mysql-slave-0              1/1     Running   0          11m
 visits-service-654fffbcc7-zj2jw      1/1     Running   0          4m2s
-wavefront-proxy-dfbd4b695-fdd6t      1/1     Running   0          14m
 ```
 
 Get the `EXTERNAL-IP` of the API Gateway:
@@ -247,7 +246,7 @@ NAME          TYPE           CLUSTER-IP    EXTERNAL-IP      PORT(S)        AGE
 api-gateway   LoadBalancer   10.7.250.24   34.1.2.22   80:32675/TCP   18m
 ```
 
-You can now brose to that IP in your browser and see the application running.
+You can now browse to that IP in your browser and see the application running.
 
 You should also see monitoring and traces from Wavefront under the application name `spring-petclinic-k8s`:
 
